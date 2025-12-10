@@ -28,6 +28,7 @@ def main(
     output: Path = typer.Option(DEFAULT_OUTPUT, "-o", "--output", help="Output trajectory file", rich_help_panel="Basic"),
     task: str | None = typer.Option(None, "-t", "--task", help="Task/problem statement", rich_help_panel="Basic"),
     stream: bool = typer.Option(False, "-s", "--stream", help="Stream live logs during execution", rich_help_panel="Basic"),
+    timeout: int | None = typer.Option(None, "--timeout", help="Timeout in seconds for command execution", rich_help_panel="Advanced"),
 ) -> None:
     # fmt: on
     """Run on a single SWE-Bench instance."""
@@ -36,10 +37,14 @@ def main(
     logger.info(f"Loading agent config from '{config_path}'")
     config = yaml.safe_load(config_path.read_text())
     
+    env_kwargs = {}
+    if timeout is not None:
+        env_kwargs["timeout"] = timeout
+    
     agent_class = InteractiveAgent if stream else DefaultAgent
     agent = agent_class(
         get_model(None, config.get("model", {})),
-        LocalEnvironment(),
+        LocalEnvironment(**env_kwargs),
         **({"mode": "yolo"} if stream else {}),
         **config.get("agent", {}),
     )
