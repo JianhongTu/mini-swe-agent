@@ -1,15 +1,16 @@
 # Makefile for automating Docker build and run for PyTorch to CoreML SDK development environment
 
-# Define variables
-IMAGE_NAME := pytorch-coreml-sdk
-DOCKERFILE_DIR := .
-SOURCE_DIR := $(shell pwd)/../workspace
+# Define variables (with defaults, can be overridden by environment variables)
+IMAGE_NAME ?= pytorch-coreml-sdk
+DOCKERFILE_DIR ?= .
+DOCKERFILE_NAME ?= $(shell pwd)/Docker/runtime
+SOURCE_DIR ?= .
 
 .PHONY: build run clean help
 
 # Build the Docker image
 build:
-	docker build -t $(IMAGE_NAME) $(DOCKERFILE_DIR)
+	docker build -t $(IMAGE_NAME) -f $(DOCKERFILE_NAME) $(DOCKERFILE_DIR)
 
 # Run the container with mounted source code volume
 run: build
