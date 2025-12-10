@@ -50,70 +50,65 @@ class SidecarEnvironment:
         self.network_id: str | None = None
         self.nc_process: subprocess.Popen | None = None
         self.config = config_class(**kwargs)
-        self._setup_connection()
 
     def get_template_vars(self) -> dict[str, Any]:
         return asdict(self.config)
 
-    def _setup_connection(self):
-        """Establish a persistent TCP connection to the dev container using nc on localhost."""
-        try:
-            self.nc_process = subprocess.Popen(
-                ['nc', 'localhost', str(self.config.dev_port)],
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
-            )
-            self.logger.info(f"Connected to dev container at localhost:{self.config.dev_port} using nc")
-        except OSError as e:
-            self.logger.error(f"Failed to start nc process: {e}")
-            raise
-
     def execute(self, command: str, cwd: str = "", *, timeout: int | None = None) -> dict[str, Any]:
-        """Execute a command in the dev container via the nc process and return the result as a dict."""
         cwd = cwd or self.config.cwd
         timeout = timeout or self.config.timeout
 
-        if not self.nc_process:
-            raise RuntimeError("nc process not started")
+        dev_host = self.config.dev_host      # e.g. "localhost" or "dev"
+        dev_port = str(self.config.dev_port) # e.g. "9000"
 
-        # Send command with exit code capture
-        full_command = f"cd {shlex.quote(cwd)}; {command}; echo 'EXIT_CODE:'$?; echo 'COMMAND_DONE_MARKER'\n"
-        self.nc_process.stdin.write(full_command.encode('utf-8'))
-        self.nc_process.stdin.flush()
+        # Build remote shell command
+        exit_prefix = "EXIT_CODE:"
+        remote_cmd = (
+            f"cd {shlex.quote(cwd)} && "
+            f"{command} ; "
+            f"echo '{exit_prefix}'$?\n"
+        )
 
-        # Read output until the marker is found
-        output = b""
-        marker = b'COMMAND_DONE_MARKER'
-        start_time = time.time()
-        while time.time() - start_time < timeout:
-            if self.nc_process.poll() is not None:
-                break  # process ended
-            data = self.nc_process.stdout.read(4096)
-            if not data:
-                break
-            output += data
-            if marker in output:
-                break
+        proc = subprocess.Popen(
+            ["nc", dev_host, dev_port],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
 
-        output_str = output.decode('utf-8', errors='replace')
+        try:
+            stdout, _ = proc.communicate(remote_cmd, timeout=timeout)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            stdout, _ = proc.communicate()
+            return {
+                "output": stdout,
+                "returncode": -1,  # or some sentinel for timeout
+                "timeout": True,
+            }
 
-        # Extract return code
-        returncode = 0
-        if 'EXIT_CODE:' in output_str:
+        # Default return code if parsing fails
+        returncode = proc.returncode
+
+        # Parse EXIT_CODE from remote output
+        if exit_prefix in stdout:
             try:
-                exit_line = [line for line in output_str.split('\n') if 'EXIT_CODE:' in line][0]
-                returncode = int(exit_line.split('EXIT_CODE:')[1].strip())
-            except (IndexError, ValueError):
+                exit_line = next(
+                    line for line in stdout.splitlines() if exit_prefix in line
+                )
+                returncode = int(exit_line.split(exit_prefix, 1)[1].strip())
+            except (StopIteration, ValueError):
                 pass
 
-        # Extract output before the marker and exit code line
-        if 'COMMAND_DONE_MARKER' in output_str:
-            output_str = output_str.split('COMMAND_DONE_MARKER')[0].strip()
-            if 'EXIT_CODE:' in output_str:
-                output_str = output_str.split('EXIT_CODE:')[0].strip()
+            # Strip metadata from output
+            stdout = stdout.split(exit_prefix, 1)[0].rstrip()
 
-        return {"output": output_str, "returncode": returncode}
+        return {
+            "output": stdout,
+            "returncode": returncode,
+            "timeout": False,
+        }
 
     def cleanup(self):
         """Terminate the nc process."""
