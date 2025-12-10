@@ -10,7 +10,7 @@ SOURCE_DIR ?= .
 
 # Build the Docker image
 build:
-	docker build -t $(IMAGE_NAME) -f $(DOCKERFILE_NAME) $(DOCKERFILE_DIR)
+	docker build --no-cache -t $(IMAGE_NAME) -f $(DOCKERFILE_NAME) $(DOCKERFILE_DIR)
 
 # Run the container with mounted source code volume
 run: build
