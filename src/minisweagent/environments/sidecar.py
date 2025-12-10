@@ -66,6 +66,7 @@ class SidecarEnvironment:
             f"cd {shlex.quote(cwd)} && "
             f"{command} ; "
             f"echo '{exit_prefix}'$?\n"
+            f"exit\n"
         )
 
         proc = subprocess.Popen(
