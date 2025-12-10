@@ -10,7 +10,7 @@ from minisweagent import global_config_dir
 from minisweagent.agents.default import DefaultAgent
 from minisweagent.agents.interactive import InteractiveAgent
 from minisweagent.config import builtin_config_dir, get_config_path
-from minisweagent.environments.local import LocalEnvironment
+from minisweagent.environments.sidecar import SidecarEnvironment
 from minisweagent.models import get_model
 from minisweagent.run.utils.save import save_traj
 from minisweagent.utils.log import logger
@@ -39,13 +39,13 @@ def main(
     config = yaml.safe_load(config_path.read_text())
     
     env_kwargs = {}
-    if o is not None:
+    if timeout is not None:
         env_kwargs["timeout"] = timeout
     
     agent_class = InteractiveAgent if stream else DefaultAgent
     agent = agent_class(
         get_model(model_name, config.get("model", {})),
-        LocalEnvironment(**env_kwargs),
+        SidecarEnvironment(**env_kwargs),
         **({"mode": "yolo"} if stream else {}),
         **config.get("agent", {}),
     )

@@ -39,7 +39,7 @@ def main(
     config = yaml.safe_load(config_path.read_text())
     
     env_kwargs = {}
-    if o is not None:
+    if timeout is not None:
         env_kwargs["timeout"] = timeout
     
     agent_class = InteractiveAgent if stream else DefaultAgent
