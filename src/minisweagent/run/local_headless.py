@@ -7,7 +7,8 @@ import typer
 import yaml
 
 from minisweagent import global_config_dir
-from minisweagent.agents.interactive import DefaultAgent
+from minisweagent.agents.default import DefaultAgent
+from minisweagent.agents.interactive import InteractiveAgent
 from minisweagent.config import builtin_config_dir, get_config_path
 from minisweagent.environments.local import LocalEnvironment
 from minisweagent.models import get_model
@@ -26,6 +27,7 @@ def main(
     config_path: Path = typer.Option( builtin_config_dir / "extra" / "swebench.yaml", "-c", "--config", help="Path to a config file", rich_help_panel="Basic"),
     output: Path = typer.Option(DEFAULT_OUTPUT, "-o", "--output", help="Output trajectory file", rich_help_panel="Basic"),
     task: str | None = typer.Option(None, "-t", "--task", help="Task/problem statement", rich_help_panel="Basic"),
+    stream: bool = typer.Option(False, "-s", "--stream", help="Stream live logs during execution", rich_help_panel="Basic"),
 ) -> None:
     # fmt: on
     """Run on a single SWE-Bench instance."""
@@ -33,9 +35,12 @@ def main(
     config_path = get_config_path(config_path)
     logger.info(f"Loading agent config from '{config_path}'")
     config = yaml.safe_load(config_path.read_text())
-    agent = DefaultAgent(
+    
+    agent_class = InteractiveAgent if stream else DefaultAgent
+    agent = agent_class(
         get_model(None, config.get("model", {})),
         LocalEnvironment(),
+        **({"mode": "yolo"} if stream else {}),
         **config.get("agent", {}),
     )
 
