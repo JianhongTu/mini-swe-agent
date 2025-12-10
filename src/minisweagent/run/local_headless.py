@@ -27,6 +27,7 @@ def main(
     config_path: Path = typer.Option( builtin_config_dir / "extra" / "swebench.yaml", "-c", "--config", help="Path to a config file", rich_help_panel="Basic"),
     output: Path = typer.Option(DEFAULT_OUTPUT, "-o", "--output", help="Output trajectory file", rich_help_panel="Basic"),
     task: str | None = typer.Option(None, "-t", "--task", help="Task/problem statement", rich_help_panel="Basic"),
+    model_name: str | None = typer.Option(None, "-m", "--model", help="Model name to use", rich_help_panel="Basic"),
     stream: bool = typer.Option(False, "-s", "--stream", help="Stream live logs during execution", rich_help_panel="Basic"),
     timeout: int | None = typer.Option(None, "--timeout", help="Timeout in seconds for command execution", rich_help_panel="Advanced"),
 ) -> None:
@@ -43,7 +44,7 @@ def main(
     
     agent_class = InteractiveAgent if stream else DefaultAgent
     agent = agent_class(
-        get_model(None, config.get("model", {})),
+        get_model(model_name, config.get("model", {})),
         LocalEnvironment(**env_kwargs),
         **({"mode": "yolo"} if stream else {}),
         **config.get("agent", {}),
