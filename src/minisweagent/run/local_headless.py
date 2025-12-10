@@ -25,6 +25,7 @@ DEFAULT_TASK = "Say hello world to confirm that the Mini SWE Agent is working."
 def main(
     config_path: Path = typer.Option( builtin_config_dir / "extra" / "swebench.yaml", "-c", "--config", help="Path to a config file", rich_help_panel="Basic"),
     output: Path = typer.Option(DEFAULT_OUTPUT, "-o", "--output", help="Output trajectory file", rich_help_panel="Basic"),
+    task: str | None = typer.Option(None, "-t", "--task", help="Task/problem statement", rich_help_panel="Basic"),
 ) -> None:
     # fmt: on
     """Run on a single SWE-Bench instance."""
@@ -40,7 +41,7 @@ def main(
 
     exit_status, result, extra_info = None, None, None
     try:
-        exit_status, result = agent.run({"task": DEFAULT_TASK})  # type: ignore[arg-type]
+        exit_status, result = agent.run({"task": task or DEFAULT_TASK})  # type: ignore[arg-type]
     except Exception as e:
         logger.error(f"Error: {e}", exc_info=True)
         exit_status, result = type(e).__name__, str(e)
