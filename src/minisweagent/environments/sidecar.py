@@ -23,6 +23,8 @@ from typing import Any
 
 @dataclass
 class SidecarEnvironmentConfig:
+    dev_host: str = "localhost"
+    """Hostname of the dev container (for nc connection)."""
     dev_port: int = 9000
     """Port on the dev container where nc is listening."""
     cwd: str = "/"
@@ -40,26 +42,23 @@ class SidecarEnvironmentConfig:
 
 class SidecarEnvironment:
     def __init__(self, *, config_class: type = SidecarEnvironmentConfig, logger: logging.Logger | None = None, **kwargs):
-        """This class sets up a sidecar environment with two Docker containers:
-        one for the agent framework and one for code execution, connected via Docker networking.
+        """This class sets up a sidecar environment that executes commands in a dev container via nc.
+        Each command execution creates a new nc connection, no persistent shell.
         See `SidecarEnvironmentConfig` for keyword arguments.
         """
         self.logger = logger or logging.getLogger("minisweagent.environment")
-        self.agent_container_id: str | None = None
-        self.dev_container_id: str | None = None
-        self.network_id: str | None = None
-        self.nc_process: subprocess.Popen | None = None
         self.config = config_class(**kwargs)
 
     def get_template_vars(self) -> dict[str, Any]:
         return asdict(self.config)
 
     def execute(self, command: str, cwd: str = "", *, timeout: int | None = None) -> dict[str, Any]:
+        """Execute a command in the dev container via nc (non-persistent connection)."""
         cwd = cwd or self.config.cwd
         timeout = timeout or self.config.timeout
 
-        dev_host = self.config.dev_host      # e.g. "localhost" or "dev"
-        dev_port = str(self.config.dev_port) # e.g. "9000"
+        dev_host = self.config.dev_host
+        dev_port = str(self.config.dev_port)
 
         # Build remote shell command
         exit_prefix = "EXIT_CODE:"
@@ -84,12 +83,11 @@ class SidecarEnvironment:
             stdout, _ = proc.communicate()
             return {
                 "output": stdout,
-                "returncode": -1,  # or some sentinel for timeout
-                "timeout": True,
+                "returncode": -1,
             }
 
-        # Default return code if parsing fails
-        returncode = proc.returncode
+        # Default return code
+        returncode = 0
 
         # Parse EXIT_CODE from remote output
         if exit_prefix in stdout:
@@ -101,29 +99,18 @@ class SidecarEnvironment:
             except (StopIteration, ValueError):
                 pass
 
-            # Strip metadata from output
+            # Strip EXIT_CODE line from output
             stdout = stdout.split(exit_prefix, 1)[0].rstrip()
 
         return {
             "output": stdout,
             "returncode": returncode,
-            "timeout": False,
         }
 
     def cleanup(self):
-        """Terminate the nc process."""
-        if self.nc_process:
-            try:
-                self.nc_process.terminate()
-                self.nc_process.wait(timeout=5)
-                self.logger.info("Terminated nc process")
-            except subprocess.TimeoutExpired:
-                self.nc_process.kill()
-                self.logger.warning("Force killed nc process")
-            except Exception as e:
-                self.logger.error(f"Error terminating nc process: {e}")
-            self.nc_process = None
+        """No cleanup needed for non-persistent connections."""
+        pass
 
     def __del__(self):
-        """Cleanup socket when object is destroyed."""
+        """Cleanup when object is destroyed."""
         self.cleanup()
