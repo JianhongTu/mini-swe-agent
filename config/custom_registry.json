@@ -5,5 +5,40 @@
     "output_cost_per_token": 0.0,
     "litellm_provider": "openai",
     "mode": "chat"
+  },
+  "qwen3": {
+    "max_tokens": 262144,
+    "input_cost_per_token": 0.0,
+    "output_cost_per_token": 0.0,
+    "litellm_provider": "openai",
+    "mode": "chat"
+  },
+  "gpt-oss": {
+    "max_tokens": 131072,
+    "input_cost_per_token": 0.0,
+    "output_cost_per_token": 0.0,
+    "litellm_provider": "openai",
+    "mode": "chat"
+  },
+  "kimi": {
+    "max_tokens": 262144,
+    "input_cost_per_token": 0.0,
+    "output_cost_per_token": 0.0,
+    "litellm_provider": "openai",
+    "mode": "chat"
+  },
+  "glm-4.6": {
+    "max_tokens": 202752,
+    "input_cost_per_token": 0.0,
+    "output_cost_per_token": 0.0,
+    "litellm_provider": "openai",
+    "mode": "chat"
+  },
+  "minimax-m2": {
+    "max_tokens": 262144,
+    "input_cost_per_token": 0.0,
+    "output_cost_per_token": 0.0,
+    "litellm_provider": "openai",
+    "mode": "chat"
   }
 }
