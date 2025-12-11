@@ -87,6 +87,15 @@ agent:
     nl -ba filename.py | sed -n '10,20p'
     ```
 
+    ### Create a new file with content
+
+    ```bash
+    printf '%s\n' "# This is a safe file creation example
+    Line 1
+    Line 2
+    Line 3" > newfile.py
+    ```
+
     ### Any other command you want to run
 
     ```bash
