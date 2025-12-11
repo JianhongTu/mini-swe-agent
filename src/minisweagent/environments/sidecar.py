@@ -65,8 +65,9 @@ class SidecarEnvironment:
         # Build remote shell command
         exit_prefix = "EXIT_CODE:"
         remote_cmd = (
-            f"{command} ; "
-            f"echo '{exit_prefix}'$?\n"
+            f"{command.rstrip()}\n"
+            f"status=$?\n"
+            f"echo '{exit_prefix}'$status\n"
             f"exit\n"
         )
 
