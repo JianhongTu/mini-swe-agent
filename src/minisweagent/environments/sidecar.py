@@ -49,12 +49,14 @@ class SidecarEnvironment:
         self.logger = logger or logging.getLogger("minisweagent.environment")
         self.config = config_class(**kwargs)
 
+        if "cwd" in kwargs:
+            self.logger.warning("The 'cwd' parameter is set but not used in SidecarEnvironment.")
+
     def get_template_vars(self) -> dict[str, Any]:
         return asdict(self.config)
 
     def execute(self, command: str, cwd: str = "", *, timeout: int | None = None) -> dict[str, Any]:
         """Execute a command in the dev container via nc (non-persistent connection)."""
-        cwd = cwd or self.config.cwd
         timeout = timeout or self.config.timeout
 
         dev_host = self.config.dev_host
@@ -63,7 +65,6 @@ class SidecarEnvironment:
         # Build remote shell command
         exit_prefix = "EXIT_CODE:"
         remote_cmd = (
-            f"cd {shlex.quote(cwd)} && "
             f"{command} ; "
             f"echo '{exit_prefix}'$?\n"
             f"exit\n"
