@@ -151,6 +151,7 @@ environment:
     LESS: -R
     PIP_PROGRESS_BAR: 'off'
     TQDM_DISABLE: '1'
+    GIT_PAGER: cat
 model:
   model_name: "gemma3"
   model_kwargs:
