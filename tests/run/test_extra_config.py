@@ -1,7 +1,14 @@
 import os
 from unittest.mock import patch
 
+import pytest
+
 from minisweagent.run.utilities.config import app, configure_if_first_time, edit, set, setup, unset
+
+
+@pytest.fixture(autouse=True)
+def no_reload(monkeypatch):
+    monkeypatch.setattr("minisweagent.run.utilities.config._reload_config", lambda: None)
 
 
 class TestConfigSetup:
@@ -438,8 +445,8 @@ class TestTyperAppIntegration:
             patch("typer.Option") as mock_option,
         ):
             # Mock the typer Option to return our test values
-            mock_option.side_effect = (
-                lambda default, **kwargs: "OPENAI_API_KEY" if "key" in str(kwargs) else "sk-test-key"
+            mock_option.side_effect = lambda default, **kwargs: (
+                "OPENAI_API_KEY" if "key" in str(kwargs) else "sk-test-key"
             )
 
             # Call the set function directly (as the app would)

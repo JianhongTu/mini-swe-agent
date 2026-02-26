@@ -34,7 +34,8 @@ def parse_toolcall_actions(tool_calls: list, *, format_error_template: str) -> l
             {
                 "role": "user",
                 "content": Template(format_error_template, undefined=StrictUndefined).render(
-                    error="No tool calls found in the response. Every response MUST include at least one tool call."
+                    error="No tool calls found in the response. Every response MUST include at least one tool call.",
+                    actions=[],
                 ),
                 "extra": {"interrupt_type": "FormatError"},
             }
@@ -46,17 +47,17 @@ def parse_toolcall_actions(tool_calls: list, *, format_error_template: str) -> l
         try:
             args = json.loads(tool_call.function.arguments)
         except Exception as e:
-            error_msg = f"Error parsing tool call arguments: {e}. "
+            error_msg = f"Error parsing tool call arguments: {e}."
         if tool_call.function.name != "bash":
             error_msg += f"Unknown tool '{tool_call.function.name}'."
-        if "command" not in args:
+        if not isinstance(args, dict) or "command" not in args:
             error_msg += "Missing 'command' argument in bash tool call."
         if error_msg:
             raise FormatError(
                 {
                     "role": "user",
                     "content": Template(format_error_template, undefined=StrictUndefined).render(
-                        error=error_msg.strip()
+                        actions=[], error=error_msg.strip()
                     ),
                     "extra": {"interrupt_type": "FormatError"},
                 }

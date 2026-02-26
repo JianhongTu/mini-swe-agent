@@ -23,7 +23,7 @@ def _make_model_from_fixture(text_outputs: list[str], cost_per_call: float = 1.0
 
 
 @pytest.mark.slow
-def test_swebench_single_end_to_end(github_test_data, tmp_path):
+def test_swebench_single_end_to_end(github_test_data, tmp_path, container_executable):
     """Test the swebench_single script using the _test subset with deterministic model.
     This mostly tests that no exception occurs.
     """
@@ -32,13 +32,16 @@ def test_swebench_single_end_to_end(github_test_data, tmp_path):
 
     with (
         patch("minisweagent.run.benchmarks.swebench_single.get_model") as mock_get_model,
-        patch("minisweagent.agents.interactive._prompt_session.prompt", side_effect=lambda *a, **kw: ""),
-        patch("minisweagent.agents.interactive._multiline_prompt_session.prompt", side_effect=lambda *a, **kw: ""),
+        patch("minisweagent.agents.utils.prompt_user.prompt_session.prompt", side_effect=lambda *a, **kw: ""),
+        patch(
+            "minisweagent.agents.utils.prompt_user._multiline_prompt_session.prompt", side_effect=lambda *a, **kw: ""
+        ),
         patch("builtins.input", return_value=""),  # For LimitsExceeded handling
     ):
         mock_get_model.return_value = _make_model_from_fixture(model_responses, cost_per_call=0.1)
 
         # Test with explicit instance ID
+        output_path = tmp_path / "test_output.json"
         main(
             subset="_test",
             split="test",
@@ -47,15 +50,20 @@ def test_swebench_single_end_to_end(github_test_data, tmp_path):
             config_spec=[str(package_dir / "config" / "benchmarks" / "swebench.yaml")],
             environment_class="docker",
             exit_immediately=False,
-            output=tmp_path / "test_output.json",
+            output=output_path,
+            model_class=None,
+            agent_class=None,
+            yolo=False,
+            cost_limit=None,
         )
 
         # Verify model was called with correct parameters
         mock_get_model.assert_called_once()
+        assert output_path.exists()
 
 
 @pytest.mark.slow
-def test_swebench_single_end_to_end_exit_immediately(github_test_data, tmp_path):
+def test_swebench_single_end_to_end_exit_immediately(github_test_data, tmp_path, container_executable):
     """Test the swebench_single script using the _test subset with deterministic model.
     This mostly tests that no exception occurs.
     This test uses the --exit-immediately flag to exit immediately when the agent wants to finish instead of prompting.
@@ -65,13 +73,16 @@ def test_swebench_single_end_to_end_exit_immediately(github_test_data, tmp_path)
 
     with (
         patch("minisweagent.run.benchmarks.swebench_single.get_model") as mock_get_model,
-        patch("minisweagent.agents.interactive._prompt_session.prompt", side_effect=lambda *a, **kw: ""),
-        patch("minisweagent.agents.interactive._multiline_prompt_session.prompt", side_effect=lambda *a, **kw: ""),
+        patch("minisweagent.agents.utils.prompt_user.prompt_session.prompt", side_effect=lambda *a, **kw: ""),
+        patch(
+            "minisweagent.agents.utils.prompt_user._multiline_prompt_session.prompt", side_effect=lambda *a, **kw: ""
+        ),
         patch("builtins.input", return_value=""),  # For LimitsExceeded handling
     ):
         mock_get_model.return_value = _make_model_from_fixture(model_responses, cost_per_call=0.1)
 
         # Test with explicit instance ID
+        output_path = tmp_path / "test_output.json"
         main(
             subset="_test",
             split="test",
@@ -80,8 +91,13 @@ def test_swebench_single_end_to_end_exit_immediately(github_test_data, tmp_path)
             config_spec=[str(package_dir / "config" / "benchmarks" / "swebench.yaml")],
             environment_class="docker",
             exit_immediately=True,
-            output=tmp_path / "test_output.json",
+            output=output_path,
+            model_class=None,
+            agent_class=None,
+            yolo=False,
+            cost_limit=None,
         )
 
         # Verify model was called with correct parameters
         mock_get_model.assert_called_once()
+        assert output_path.exists()

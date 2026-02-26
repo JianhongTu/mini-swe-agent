@@ -6,7 +6,7 @@
 
 📣 [New tutorial on building minimal AI agents](https://minimal-agent.com/)<br/>
 📣 [Gemini 3 Pro reaches 74% on SWE-bench verified with mini-swe-agent!](https://x.com/KLieret/status/1991164693839270372)<br/>
-📣 [New blogpost: Randomly switching between GPT-5 and Sonnet 4 boosts performance](https://www.swebench.com/SWE-bench/blog/2025/08/19/mini-roulette/)
+📣 [New blogpost: Randomly switching between GPT-5 and Sonnet 4 boosts performance](https://www.swebench.com/post-250820-mini-roulette.html)
 
 [![Docs](https://img.shields.io/badge/Docs-green?style=for-the-badge&logo=materialformkdocs&logoColor=white)](https://mini-swe-agent.com/latest/)
 [![Slack](https://img.shields.io/badge/Slack-4A154B?style=for-the-badge&logo=slack&logoColor=white)](https://join.slack.com/t/swe-bench/shared_invite/zt-36pj9bu5s-o3_yXPZbaH2wVnxnss1EkQ)
@@ -17,22 +17,17 @@
 
 In 2024, we built [SWE-bench](https://github.com/swe-bench/SWE-bench) & [SWE-agent](https://github.com/swe-agent/swe-agent) and helped kickstart the coding agent revolution.
 
-We now ask: **What if our agent was 100x smaller, and still worked nearly as well?**
+We now ask: **What if our agent was 100x simpler, and still worked nearly as well?**
 
-The `mini` agent is for
+`mini` is
 
-- **Researchers** who want to **[benchmark](https://swe-bench.com), [fine-tune](https://swesmith.com/) or RL** without assumptions, bloat, or surprises
-- **Developers** who like to **own, understand, and modify** their tools
-- **Engineers** who want something **trivial to sandbox & to deploy anywhere**
-
-Here's some details:
-
+- **Widely adopted**: Used by Meta, NVIDIA, Essential AI, IBM, Nebius, Anyscale, Princeton University, Stanford University, and many more.
 - **Minimal**: Just some 100 lines of python for the [agent class](https://github.com/SWE-agent/mini-swe-agent/blob/main/src/minisweagent/agents/default.py) (and a bit more for the [environment](https://github.com/SWE-agent/mini-swe-agent/blob/main/src/minisweagent/environments/local.py),
 [model](https://github.com/SWE-agent/mini-swe-agent/blob/main/src/minisweagent/models/litellm_model.py), and [run script](https://github.com/SWE-agent/mini-swe-agent/blob/main/src/minisweagent/run/hello_world.py)) — no fancy dependencies!
-- **Performant:** Scores >74% on the [SWE-bench verified benchmark](https://www.swebench.com/) benchmark; starts much faster than Claude Code
-- **Deployable:** In addition to local envs, you can use **docker**, **podman**, **singularity**, **apptainer**, and more
-- Built by the Princeton & Stanford team behind [SWE-bench](https://swebench.com), [SWE-agent](https://swe-agent.com), and more (see below)
-- **Widely adopted:** In use by Meta, NVIDIA, Essential AI, Anyscale, and others
+- **Performant:** Scores >74% on the [SWE-bench verified benchmark](https://www.swebench.com/); starts much faster than Claude Code
+- **Deployable:** Supports **local environments**, **docker/podman**, **singularity/apptainer**, **bublewrap**, **contree**, and more
+- **Compatible:** Supports all models via **litellm**, **openrouter**, **portkey**, and more. Support for `/completion` and `/response` endpoints, interleaved thinking etc.
+- Built by the Princeton & Stanford team behind [SWE-bench](https://swebench.com), [SWE-agent](https://swe-agent.com), and more
 - **Tested:** [![Codecov](https://img.shields.io/codecov/c/github/swe-agent/mini-swe-agent?style=flat-square)](https://codecov.io/gh/SWE-agent/mini-swe-agent)
 
 <details>
@@ -86,7 +81,8 @@ Unlike other agents (including our own [swe-agent](https://swe-agent.com/latest/
 <details>
 <summary>Should I use SWE-agent or mini-SWE-agent?</summary>
 
-You should use `mini-swe-agent` if
+You should consider `mini-swe-agent` your default choice.
+In particular, you should use `mini-swe-agent` if
 
 - You want a quick command line tool that works locally
 - You want an agent with a very simple control flow
@@ -95,9 +91,8 @@ You should use `mini-swe-agent` if
 
 You should use `swe-agent` if
 
-- You need specific tools or want to experiment with different tools
+- You want to experiment with different sets of tools, each with their own interface
 - You want to experiment with different history processors
-- You want very powerful yaml configuration without touching code
 
 What you get with both
 
